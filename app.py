@@ -181,7 +181,3 @@ The model predicts a possibility of disease.
 
 ✔ Follow medical advice
 """)
-
-st.markdown("---")
-
-st.caption()
