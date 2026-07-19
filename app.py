@@ -2,59 +2,189 @@ import streamlit as st
 import numpy as np
 import pickle
 
-# Load Model and Scaler
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(
+    page_title="AI Disease Prediction",
+    page_icon="🩺",
+    layout="wide"
+)
+
+# ---------------- LOAD MODEL ----------------
 with open("disease_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
-st.set_page_config(page_title="Disease Prediction System", page_icon="🩺")
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("🩺 Disease Prediction")
+st.sidebar.markdown("---")
+st.sidebar.info(
+    """
+This application predicts whether a patient is likely to have a disease based on health parameters.
 
+Developed using:
+- Python
+- Scikit-Learn
+- Streamlit
+"""
+)
+
+# ---------------- TITLE ----------------
 st.title("🩺 AI Disease Prediction System")
-st.write("Enter the patient details below to predict the disease.")
+st.markdown("### Enter Patient Information")
 
-# User Inputs
-age = st.number_input("Age", min_value=1, max_value=120, value=25)
+st.markdown("---")
 
-bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=22.5)
+# ---------------- INPUTS ----------------
 
-blood_pressure = st.number_input("Blood Pressure", min_value=50, max_value=250, value=120)
+col1, col2 = st.columns(2)
 
-glucose = st.number_input("Glucose Level", min_value=50, max_value=500, value=100)
+with col1:
+    age = st.number_input("Age", 1, 120, 25)
 
-cholesterol = st.number_input("Cholesterol", min_value=50, max_value=400, value=180)
+    bmi = st.number_input(
+        "BMI",
+        min_value=10.0,
+        max_value=60.0,
+        value=22.5,
+        format="%.1f"
+    )
 
-heart_rate = st.number_input("Heart Rate", min_value=30, max_value=220, value=72)
+    blood_pressure = st.number_input(
+        "Blood Pressure",
+        50,
+        250,
+        120
+    )
 
-smoking = st.selectbox("Smoking", [0, 1])
+    glucose = st.number_input(
+        "Glucose Level",
+        50,
+        500,
+        100
+    )
 
-alcohol = st.selectbox("Alcohol", [0, 1])
+    cholesterol = st.number_input(
+        "Cholesterol",
+        50,
+        400,
+        180
+    )
 
-physical_activity = st.number_input("Physical Activity (Hours/Week)", min_value=0, max_value=40, value=5)
+with col2:
 
-family_history = st.selectbox("Family History", [0, 1])
+    heart_rate = st.number_input(
+        "Heart Rate",
+        30,
+        220,
+        72
+    )
 
-if st.button("Predict Disease"):
+    smoking = st.selectbox(
+        "Smoking",
+        ["No", "Yes"]
+    )
 
-    data = np.array([[age,
-                      bmi,
-                      blood_pressure,
-                      glucose,
-                      cholesterol,
-                      heart_rate,
-                      smoking,
-                      alcohol,
-                      physical_activity,
-                      family_history]])
+    alcohol = st.selectbox(
+        "Alcohol",
+        ["No", "Yes"]
+    )
+
+    physical_activity = st.number_input(
+        "Physical Activity (Hours/Week)",
+        0,
+        40,
+        5
+    )
+
+    family_history = st.selectbox(
+        "Family History",
+        ["No", "Yes"]
+    )
+
+# Convert Yes/No to 0/1
+
+smoking = 1 if smoking == "Yes" else 0
+alcohol = 1 if alcohol == "Yes" else 0
+family_history = 1 if family_history == "Yes" else 0
+
+st.markdown("---")
+
+# ---------------- BUTTON ----------------
+
+if st.button("🔍 Predict Disease", use_container_width=True):
+
+    data = np.array([[
+
+        age,
+        bmi,
+        blood_pressure,
+        glucose,
+        cholesterol,
+        heart_rate,
+        smoking,
+        alcohol,
+        physical_activity,
+        family_history
+
+    ]])
 
     data = scaler.transform(data)
 
     prediction = model.predict(data)
 
+    probability = model.predict_proba(data)
+
+    confidence = np.max(probability) * 100
+
+    st.progress(int(confidence))
+
+    st.write(f"### Prediction Confidence: **{confidence:.2f}%**")
+
+    st.markdown("---")
+
     if prediction[0] == 0:
-    st.success("✅ Result: Healthy")
-    st.info("No disease is predicted based on the entered values.")
-else:
-    st.error("⚠️ Result: Disease Detected")
-    st.warning("Please consult a healthcare professional for further evaluation.")
+
+        st.success("## ✅ Healthy")
+
+        st.info("""
+No disease is predicted based on the entered values.
+
+### Health Tips
+
+✔ Eat healthy food
+
+✔ Exercise regularly
+
+✔ Drink enough water
+
+✔ Sleep 7–8 hours daily
+
+✔ Regular health checkups
+""")
+
+    else:
+
+        st.error("## ⚠ Disease Detected")
+
+        st.warning("""
+The model predicts a possibility of disease.
+
+### Recommendations
+
+✔ Consult a doctor
+
+✔ Get medical tests
+
+✔ Maintain healthy lifestyle
+
+✔ Follow medical advice
+""")
+
+st.markdown("---")
+
+st.caption(
+    "⚠ Disclaimer: This AI model is developed for educational purposes only. "
+    "It should not be used as a substitute for professional medical diagnosis."
+)
