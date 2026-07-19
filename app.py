@@ -184,7 +184,4 @@ The model predicts a possibility of disease.
 
 st.markdown("---")
 
-st.caption(
-    "⚠ Disclaimer: This AI model is developed for educational purposes only. "
-    "It should not be used as a substitute for professional medical diagnosis."
-)
+st.caption()
